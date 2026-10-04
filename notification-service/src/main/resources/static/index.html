@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Live orders</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+    #status { font-size: .9rem; color: #666; }
+    li { margin: .4rem 0; font-family: ui-monospace, monospace; font-size: .9rem; }
+  </style>
+</head>
+<body>
+  <h1>Live orders</h1>
+  <p id="status">Connecting...</p>
+  <ul id="feed"></ul>
+
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+  <script>
+    const status = document.getElementById('status');
+    const feed = document.getElementById('feed');
+    const client = new StompJs.Client({
+      webSocketFactory: () => new SockJS('/ws'),
+      reconnectDelay: 3000,
+      onConnect: () => {
+        status.textContent = 'Connected. Waiting for orders...';
+        client.subscribe('/topic/orders', msg => {
+          const li = document.createElement('li');
+          li.textContent = msg.body;
+          feed.prepend(li);
+        });
+      },
+      onWebSocketClose: () => { status.textContent = 'Disconnected. Retrying...'; },
+    });
+    client.activate();
+  </script>
+</body>
+</html>

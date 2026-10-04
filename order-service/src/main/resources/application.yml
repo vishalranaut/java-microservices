@@ -1,0 +1,46 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: order-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/orders_db}
+    username: ${DB_USER:app}
+    password: ${DB_PASSWORD:app}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update   # starter shortcut; use Flyway for real projects
+  rabbitmq:
+    host: ${RABBIT_HOST:localhost}
+    port: 5672
+    username: guest
+    password: guest
+  mvc:
+    problemdetails:
+      enabled: true
+
+grpc:
+  client:
+    user-service:
+      address: static://${USER_SERVICE_GRPC:localhost:9090}
+      negotiation-type: plaintext
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      userService:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        ignore-exceptions:
+          - com.example.order.client.UserNotFoundException
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
